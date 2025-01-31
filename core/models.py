@@ -15,6 +15,7 @@ class QuestType(models.Model):
         *проекты для открытия боссов, будут так или иначе связанны с тем что потребуется на боссе.
 
     IMHO: я бы отказался от подтипов квестов (у побочных), а сделал бы подтипы просто типами
+    Babuuum: Soglasen
     """
     # it's dynamic, so we can add new types without changing the database schema
     name = models.CharField(max_length=100)
@@ -81,6 +82,9 @@ class Achievement(models.Model):
 
     IMHO: не совсем понимаю разницу между Требования и Шаги выполнения -- это одно и то же?
     Плюс я так понял, награды привязаны к грейдам, а не к самим ачивкам.
+    Babuuum: po greidam soglasen.
+    Shagi vipolneni9 - nyjni dl9 togo 4to bi kvest sdat',
+    Trebovani9 - nyjni dl9 togo 4to bi kvest v39t'
     """
     name = models.CharField(max_length=100)
     description = models.TextField()
@@ -94,6 +98,9 @@ class Achievement(models.Model):
 
 
 class Skill(models.Model):
+    """
+
+    """
     # one to one with quests
     name = models.CharField(max_length=100)
 
@@ -101,70 +108,45 @@ def __str__(self):
     return f"{self.name}"
 
 
-class Stack(models.Model):
-    name = models.CharField(max_length=100)
-    skill = models.ForeignKey(Skill, on_delete=models.CASCADE, related_name='skill')
-
-    def __str__(self):
-        return f"{self.name}"
-
-
 class Profession(models.Model):
-    # one to one with Skills
+    """
+
+    """
     name = models.CharField(max_length=100)
-    stack = models.ForeignKey(Stack, on_delete=models.CASCADE, related_name='profession') # nyjni dl9 proverki trebovanii kvestov
-    skill = models.ForeignKey(Skill, on_delete=models.CASCADE, related_name='profession')
+    skills = models.ForeignKey(Skill, on_delete=models.CASCADE, related_name='profession')
 
     def __str__(self):
         return f"{self.name}"
 
 
 class UserAchievement(models.Model):
-    # user's completed achievements
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='achievements')
     achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE, related_name='user_achievements')
     date_completed = models.DateTimeField(auto_now_add=True)
 
 
 class UserQuest(models.Model):
-    # user's completed quests
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='quests')
     quest = models.ForeignKey(Quest, on_delete=models.CASCADE, related_name='user_quests')
     date_completed = models.DateTimeField(auto_now_add=True)
 
 
 class UserProfession(models.Model):
-    #many to many user + QuestsTags
-    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='skills')
-    quest = models.ForeignKey(Profession, on_delete=models.CASCADE, related_name='user_skills')
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='professions')
+    profession = models.ForeignKey(Profession, on_delete=models.CASCADE, related_name='user_profession')
 
 
 class UserSkill(models.Model):
-    #many to many user + QuestsTags
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='skills')
     skill = models.ForeignKey(Skill, on_delete=models.CASCADE, related_name='user_skills')
 
 
-class QuestsSkills(models.Model):
-    pass
+class QuestProfession(models.Model):
+    #trebovani9 dl9 kvestov
+    quest = models.ForeignKey(Quest, on_delete=models.CASCADE, related_name='profession_requirement')
+    profession = models.ForeignKey(Profession, on_delete=models.CASCADE, related_name='quest')
 
 
-class QuestsProfession(models.Model):
-    pass
+#Shagi vipolneni9, v golvoe taka9 ide9 reali3ovat' otdel'nyu tablicy Steps, sdelat' one to one sv93' s achivment, i one to many ot quest
 
 
-#class QuestsTags(models.Model):
-    #Необходимы только для разблокировки квестов.
-
-
-#class AchievementsTags(models.Model):
-    #Необходимы для взаимодействия с ачивками(только для админского взаимодействия с ачивками)
-
-
-    """
-    Так как у нас не на прямую скиллы открывают профы, а в каждой профе есть свои уникальные категории, которые уже содержат скиллы
-    мложно это реализовать поэтому предлагаю, сделать так: вынести все Profession -> requirements -> skills, в отдельный файл, доставать их
-    из него и проверять в функции/методе
-    """
-
-#vopros, sv93i kvestov, usera i navikov prof
