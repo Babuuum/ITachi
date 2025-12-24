@@ -5,7 +5,7 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 # from sqlalchemy import Enum as SQLEnum
 # from enum import Enum
 
-from app.core.db.base import Base
+from core.db.base import Base
 
 
 # class LeagueFormat(Enum):
