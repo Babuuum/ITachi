@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional, List
-from sqlalchemy import Integer, String, DateTime, TEXT, BOOLEAN, ForeignKey, Table, Column
+from sqlalchemy import Integer, String, DateTime, TEXT, BOOLEAN, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 # from sqlalchemy import Enum as SQLEnum
 # from enum import Enum
@@ -22,24 +22,28 @@ from core.db.base import Base
 #     LEGENDARY = 'legendary'
 
 
-league_goals = Table(
-    "leagues_achievements",
-    Base.metadata,
-    Column('league_id', ForeignKey('leagues.id'), primary_key=True),
-    Column('achievement_id', ForeignKey('achievements.id'), primary_key=True)
-)
+class LeagueAchievement(Base):
+    __tablename__ = 'leagues_achievements'
 
-users_achievements = Table(
-    "users_achievements",
-    Base.metadata,
-    Column('user_id', ForeignKey('users.id'), primary_key=True),
-    Column('achievement_id', ForeignKey('achievements.id'), primary_key=True),
-    Column('completed', BOOLEAN, default=False),
-    Column('completed_at', DateTime, nullable=True)
-)
-#добавить classmethod, для формирования прогресс баров для сложных ачивок
-#добавить функцию проверки выполнения условий для разблокировки и условий выполнения
-#сделать трекинг лист ачивок
+    league_id: Mapped[int] = mapped_column(ForeignKey('leagues.id'), primary_key=True)
+    achievement_id: Mapped[int] = mapped_column(ForeignKey('achievements.id'), primary_key=True)
+
+
+class UserAchievement(Base):
+    __tablename__ = 'users_achievements'
+
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), primary_key=True)
+    achievement_id: Mapped[int] = mapped_column(ForeignKey('achievements.id'), primary_key=True)
+    completed: Mapped[bool] = mapped_column(BOOLEAN, default=False)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    user: Mapped['User'] = relationship(back_populates='user_achievements')
+    achievement: Mapped['Achievement'] = relationship(back_populates='user_achievements')
+
+
+# добавить classmethod, для формирования прогресс баров для сложных ачивок
+# добавить функцию проверки выполнения условий для разблокировки и условий выполнения
+# сделать трекинг лист ачивок
 
 class User(Base):
     __tablename__ = 'users'
@@ -53,10 +57,9 @@ class User(Base):
     )
     is_active: Mapped[bool] = mapped_column(BOOLEAN, default=True)
 
-
-    achievements: Mapped[List['Achievement']] = relationship(
-        secondary="users_achievements",
-        back_populates='users'
+    user_achievements: Mapped[List['UserAchievement']] = relationship(
+        back_populates='user',
+        cascade='all, delete-orphan'
     )
 
 
@@ -81,7 +84,7 @@ class League(Base):
     # )
 
     achievements: Mapped[List['Achievement']] = relationship(
-        secondary="leagues_achievements",
+        secondary='leagues_achievements',
         back_populates='leagues'
     )
 
@@ -113,12 +116,13 @@ class Achievement(Base):
     #     back_populates='achievement_requirements'
     # )
 
-    users: Mapped[List['User']] = relationship(
-        secondary="users_achievements",
-        back_populates='achievements'
+    user_achievements: Mapped[List['UserAchievement']] = relationship(
+        back_populates='achievement',
+        cascade='all, delete-orphan'
     )
+
     leagues: Mapped[List[League]] = relationship(
-        secondary="leagues_achievements",
+        secondary='leagues_achievements',
         back_populates='achievements'
     )
 
