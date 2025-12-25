@@ -34,7 +34,7 @@ async def test_user_auth_success(monkeypatch):
         mock_get_or_create,
     )
 
-    result = await user_services.user_auth(user_tg_id=1, username="nick")
+    result = await user_services.user_authorization(user_tg_id=1, username="nick")
 
     mock_get_or_create.assert_awaited_once_with(
         fake_session,
@@ -57,6 +57,6 @@ async def test_user_auth_error_closes_session(monkeypatch):
     )
 
     with pytest.raises(TypeError):
-        await user_services.user_auth(user_tg_id=2, username="err")
+        await user_services.user_authorization(user_tg_id=2, username="err")
 
     fake_session.close.assert_awaited_once()

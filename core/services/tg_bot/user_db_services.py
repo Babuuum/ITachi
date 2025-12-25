@@ -6,7 +6,7 @@ from core.db.models import User
 class UserService:
     @staticmethod
     async def get_user_by_tg_id(session: AsyncSession, tg_id: int) -> User | None:
-        result = await session.execute(select(User).where(User.tg_id == tg_id))
+        result = await session.execute(select(User).where(User.tg_id == tg_id, User.is_active == True))  # noqa: E712
         return result.scalar_one_or_none()
 
     @staticmethod
