@@ -11,7 +11,7 @@ async def cmd_start(message: Message):
     user_tg_id = message.from_user.id
     username = message.from_user.username
 
-    user = user_auth(user_tg_id=user_tg_id, username=username)
+    user = await user_auth(user_tg_id=user_tg_id, username=username)
 
     await message.answer(
         f"Привет, {username}!\n"
