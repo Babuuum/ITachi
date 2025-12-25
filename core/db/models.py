@@ -93,7 +93,7 @@ class Achievement(Base):
     __tablename__ = 'achievements'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(20), nullable=False)
+    name: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     # achievement_group_id: Mapped[int | None] = mapped_column(ForeignKey("achievements.id"), nullable=True)
     # achievement_requirement_id: Mapped[int | None] = mapped_column(ForeignKey("achievements.id"), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(TEXT, nullable=True)

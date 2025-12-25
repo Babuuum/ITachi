@@ -1,0 +1,18 @@
+FROM python:3.12-slim
+
+LABEL authors="Babuuum"
+
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    gcc \
+    build-essential \
+    libpq-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+COPY . .
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
