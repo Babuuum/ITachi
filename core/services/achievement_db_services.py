@@ -5,7 +5,7 @@ from typing import List, Sequence
 from core.db.models import Achievement, UserAchievement
 
 
-class AchievementService:
+class AchievementDbService:
     @staticmethod
     async def get_achievements_for_user(session: AsyncSession, user_id: int) -> Sequence[Achievement]:
         stmt = (
@@ -52,5 +52,4 @@ class AchievementService:
     async def get_achievement_by_name(session: AsyncSession, achievement_name: str) -> Achievement:
         achievement = await session.scalars(select(Achievement).where(Achievement.name == achievement_name))
         return achievement.first()
-
 

@@ -3,40 +3,40 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.fsm.state import State, StatesGroup
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 from core.services.tg_bot.achievement_services import complete_achievement, achievement_check
-from core.services.tg_bot.user_services import user_authentication
+from core.services.tg_bot.user_services import user_auth
 
 router = Router()
-
-user_data_storage = {}
 
 class Achievement(StatesGroup):
     achievement = State()
 
 
 @router.message(Command('complete_achievement'))
-async def add_progress(message: Message,  state: FSMContext):
-    user_tg_id = message.from_user.id
-    user = await user_authentication(user_tg_id)
-
-    if user is None:
-        await message.answer("Пользователь не найден или не активен.")
-        return
-
-    user_data_storage['user_id'] = user.id
-
+async def add_progress(message: Message,  state: FSMContext, session: AsyncSession):
+    user = await user_auth(session=session, message=message)
+    await state.update_data(user_id=user.id)
     await state.set_state(Achievement.achievement)
     await message.answer("Введите название ачивки")
 
 @router.message(Achievement.achievement)
-async def achievement_name(message: Message, state: FSMContext):
+async def achievement_name(message: Message, state: FSMContext, session: AsyncSession):
+    state_data = await state.get_data()
+    user_id = state_data.get('user_id')
+
+    if not user_id:
+        await message.answer('Не удалось определить пользователя. Попробуйте снова.')
+        await state.clear()
+        return
+
     achievement_name = message.text
-    achievement_exists = await achievement_check(achievement_name)
+    achievement_exists = await achievement_check(session=session, achievement_name=achievement_name)
 
     if achievement_exists:
-        await complete_achievement(user_data_storage['user_id'], achievement_name)
+        await complete_achievement(session=session, user_id=user_id, achievement_name=achievement_name)
         await message.answer('achievement complete')
     else:
         await message.answer('achievement not found')

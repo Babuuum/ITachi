@@ -25,7 +25,7 @@ class FakeSession:
 
 async def test_user_auth_success(monkeypatch):
     fake_session = FakeSession()
-    monkeypatch.setattr(user_services, "session", fake_session)
+    fake_message = type("Msg", (), {"from_user": type("FU", (), {"id": 1, "username": "nick"})})()
 
     mock_get_or_create = AsyncMock(return_value="user_obj")
     monkeypatch.setattr(
@@ -34,20 +34,19 @@ async def test_user_auth_success(monkeypatch):
         mock_get_or_create,
     )
 
-    result = await user_services.user_authorization(user_tg_id=1, username="nick")
+    result = await user_services.user_auth(session=fake_session, message=fake_message)
 
     mock_get_or_create.assert_awaited_once_with(
         fake_session,
         tg_id=1,
         tg_nickname="nick",
     )
-    fake_session.close.assert_awaited_once()
     assert result == "user_obj"
 
 
 async def test_user_auth_error_closes_session(monkeypatch):
     fake_session = FakeSession()
-    monkeypatch.setattr(user_services, "session", fake_session)
+    fake_message = type("Msg", (), {"from_user": type("FU", (), {"id": 2, "username": "err"})})()
 
     mock_get_or_create = AsyncMock(side_effect=RuntimeError("boom"))
     monkeypatch.setattr(
@@ -56,7 +55,5 @@ async def test_user_auth_error_closes_session(monkeypatch):
         mock_get_or_create,
     )
 
-    with pytest.raises(TypeError):
-        await user_services.user_authorization(user_tg_id=2, username="err")
-
-    fake_session.close.assert_awaited_once()
+    with pytest.raises(RuntimeError):
+        await user_services.user_auth(session=fake_session, message=fake_message)

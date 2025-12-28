@@ -1,65 +1,28 @@
 from typing import List, Sequence
+from sqlalchemy.ext.asyncio import AsyncSession
+from core.db.models import Achievement
+from core.services.achievement_db_services import AchievementDbService
 
-from core.db.session import async_session
-from core.db.models import Achievement, UserAchievement
-from core.services.tg_bot.achievement_db_services import AchievementService
+
+async def get_achievements(session: AsyncSession) -> List[Achievement]:
+    achievements = await AchievementDbService.get_all_achievements(session)
+    return achievements
 
 
-session = async_session()
+async def complete_achievement(session: AsyncSession, user_id: int, achievement_name: str) -> None:
+    await AchievementDbService.add_achievement_to_user(session, user_id, achievement_name)
 
-async def get_achievements() -> List[Achievement]:
-    try:
-        async with session.begin():
-            achievements = await AchievementService.get_all_achievements(session)
-            return achievements          
 
-    except Exception as e:
-        raise print(f'get achievement error: {e}')
-    finally:
-        await session.close()
+async def get_user_achievements(session: AsyncSession, user_id: int) -> Sequence[Achievement]:
+    achievements = await AchievementDbService.get_achievements_for_user(session, user_id)
+    return achievements
 
-async def complete_achievement(user_id: int, achievement_name: str) -> None:
-    try:
-        async with session.begin():
-            await AchievementService.add_achievement_to_user(session, user_id, achievement_name)
 
-    except Exception as e:
-        raise print(f'complete_achievement error: {e}')
-    finally:
-        await session.close()
+async def get_user_completed_achievements(session: AsyncSession, user_id: int) -> Sequence[Achievement]:
+    achievements = await AchievementDbService.get_completed_achievements_for_user(session, user_id)
+    return achievements
 
-async def get_user_achievements(user_id: int) -> Sequence[Achievement]:
-    try:
-        async with session.begin():
-            achievements = await AchievementService.get_achievements_for_user(session, user_id)
-            return achievements
 
-    except Exception as e:
-        raise print(f'get achievement error: {e}')
-    finally:
-        await session.close()
-
-async def get_user_completed_achievements(user_id: int) -> Sequence[Achievement]:
-    try:
-        async with session.begin():
-            achievements = await AchievementService.get_completed_achievements_for_user(session, user_id)
-            return achievements
-
-    except Exception as e:
-        raise print(f'get achievement error: {e}')
-    finally:
-        await session.close()
-
-async def achievement_check(achievement_name: str) -> bool:
-    try:
-        async with session.begin():
-            achievement = await AchievementService.get_achievement_by_name(session, achievement_name)
-            if achievement:
-                return True
-            else:
-                return False
-
-    except Exception as e:
-        raise print(f'get achievement error: {e}')
-    finally:
-        await session.close()
+async def achievement_check(session: AsyncSession, achievement_name: str) -> bool:
+    achievement = await AchievementDbService.get_achievement_by_name(session, achievement_name)
+    return bool(achievement)
