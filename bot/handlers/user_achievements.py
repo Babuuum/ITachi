@@ -3,8 +3,8 @@ from aiogram import Router
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.services.tg_bot.achievement_services import get_user_achievements
-from core.services.tg_bot.user_services import user_auth
+from core.services.achievement_db_services import AchievementDbService
+from core.utils.user_auth import user_auth
 
 router = Router()
 
@@ -12,7 +12,7 @@ router = Router()
 @router.message(Command('user_achievements'))
 async def user_achievements(message: Message, session: AsyncSession):
     user = await user_auth(session=session, message=message)
-    achievements = await get_user_achievements(session=session, user_id=user.id)
+    achievements = await AchievementDbService.get_achievements_for_user(session=session, user_id=user.id)
 
     if achievements == []:
         return await message.answer("У вас нет доступных достижений.")

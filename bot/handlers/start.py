@@ -3,7 +3,7 @@ from aiogram import Router
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.services.tg_bot.user_services import user_auth
+from core.utils.user_auth import user_auth
 
 router = Router()
 

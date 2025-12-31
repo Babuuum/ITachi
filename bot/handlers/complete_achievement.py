@@ -5,9 +5,8 @@ from aiogram.types import Message
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-from core.services.tg_bot.achievement_services import complete_achievement, achievement_check
-from core.services.tg_bot.user_services import user_auth
+from core.services.achievement_db_services import AchievementDbService
+from core.utils.user_auth import user_auth
 
 router = Router()
 
@@ -33,10 +32,10 @@ async def achievement_name(message: Message, state: FSMContext, session: AsyncSe
         return
 
     achievement_name = message.text
-    achievement_exists = await achievement_check(session=session, achievement_name=achievement_name)
+    achievement_exists = await AchievementDbService.get_achievement_by_name(session=session, achievement_name=achievement_name)
 
     if achievement_exists:
-        await complete_achievement(session=session, user_id=user_id, achievement_name=achievement_name)
+        await AchievementDbService.add_achievement_to_user(session=session, user_id=user_id, achievement_name=achievement_name)
         await message.answer('achievement complete')
     else:
         await message.answer('achievement not found')

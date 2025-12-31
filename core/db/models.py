@@ -97,6 +97,7 @@ class Achievement(Base):
     # achievement_group_id: Mapped[int | None] = mapped_column(ForeignKey("achievements.id"), nullable=True)
     # achievement_requirement_id: Mapped[int | None] = mapped_column(ForeignKey("achievements.id"), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(TEXT, nullable=True)
+    active: Mapped[bool] = mapped_column(BOOLEAN, default=False)
 
     # achievement_group: Mapped['Achievement'] = relationship(
     #     back_populates='req_to_complite',

@@ -2,8 +2,6 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from core.services.tg_bot import user_services
-
 pytestmark = pytest.mark.anyio
 
 
