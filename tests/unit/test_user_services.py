@@ -2,17 +2,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from core.utils import user_auth as user_auth_module
+
 pytestmark = pytest.mark.anyio
 
 
 class FakeSession:
-    """Minimal async session mock that supports `async with session.begin()`."""
-
-    def __init__(self):
-        self.close = AsyncMock()
-
-    def begin(self):
-        return self
+    """Minimal async session mock compatible with async context manager."""
 
     async def __aenter__(self):
         return self
@@ -21,18 +17,22 @@ class FakeSession:
         return False
 
 
+def make_fake_message(tg_id: int, username: str):
+    return type("Msg", (), {"from_user": type("FU", (), {"id": tg_id, "username": username})()})()
+
+
 async def test_user_auth_success(monkeypatch):
     fake_session = FakeSession()
-    fake_message = type("Msg", (), {"from_user": type("FU", (), {"id": 1, "username": "nick"})})()
+    fake_message = make_fake_message(1, "nick")
 
     mock_get_or_create = AsyncMock(return_value="user_obj")
     monkeypatch.setattr(
-        user_services.UserService,
+        user_auth_module.UserService,
         "get_or_create_user",
         mock_get_or_create,
     )
 
-    result = await user_services.user_auth(session=fake_session, message=fake_message)
+    result = await user_auth_module.user_auth(session=fake_session, message=fake_message)
 
     mock_get_or_create.assert_awaited_once_with(
         fake_session,
@@ -42,16 +42,16 @@ async def test_user_auth_success(monkeypatch):
     assert result == "user_obj"
 
 
-async def test_user_auth_error_closes_session(monkeypatch):
+async def test_user_auth_error(monkeypatch):
     fake_session = FakeSession()
-    fake_message = type("Msg", (), {"from_user": type("FU", (), {"id": 2, "username": "err"})})()
+    fake_message = make_fake_message(2, "err")
 
     mock_get_or_create = AsyncMock(side_effect=RuntimeError("boom"))
     monkeypatch.setattr(
-        user_services.UserService,
+        user_auth_module.UserService,
         "get_or_create_user",
         mock_get_or_create,
     )
 
     with pytest.raises(RuntimeError):
-        await user_services.user_auth(session=fake_session, message=fake_message)
+        await user_auth_module.user_auth(session=fake_session, message=fake_message)
