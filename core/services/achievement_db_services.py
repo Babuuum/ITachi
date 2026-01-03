@@ -3,12 +3,17 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Sequence
 
-from core.db.models import Achievement, UserAchievement
+from core.db.models import Achievement, UserAchievement, User
 
 
 class AchievementDbService:
     @staticmethod
-    async def get_achievements_for_user(session: AsyncSession, user_id: int) -> Sequence[Achievement]:
+    async def get_achievements_for_user(session: AsyncSession, user_id: int) -> Sequence[Achievement] | None:
+        user = await session.scalars(select(User).where(User.id==user_id, User.is_active==True))
+
+        if not user:
+            return None
+
         stmt = (
             select(Achievement)
             .join(UserAchievement, UserAchievement.achievement_id == Achievement.id)
@@ -22,7 +27,12 @@ class AchievementDbService:
 
 
     @staticmethod
-    async def get_completed_achievements_for_user(session: AsyncSession, user_id: int) -> Sequence[Achievement]:
+    async def get_completed_achievements_for_user(session: AsyncSession, user_id: int) -> Sequence[Achievement] | None:
+        user = await session.scalars(select(User).where(User.id == user_id, User.is_active == True))
+
+        if not user:
+            return None
+
         stmt = (
             select(Achievement)
             .join(UserAchievement, UserAchievement.achievement_id == Achievement.id)

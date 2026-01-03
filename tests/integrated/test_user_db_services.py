@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import select
 
 from core.db.models import User
-from core.services.tg_bot.user_db_services import UserService
+from core.services.tg_bot.user_tg_services import UserService
 
 
 pytestmark = pytest.mark.anyio
