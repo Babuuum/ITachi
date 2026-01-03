@@ -30,7 +30,7 @@ async def test_achievements_success(monkeypatch):
         types.SimpleNamespace(name="test_2", description="desc2"),
     ]
     mock_get = AsyncMock(return_value=ach_list)
-    monkeypatch.setattr("bot.handlers.achievements.get_achievements", mock_get)
+    monkeypatch.setattr("bot.handlers.achievements.AchievementDbService.get_all_achievements", mock_get)
 
     fake_session = object()
     await achievements(message, session=fake_session)
@@ -47,7 +47,7 @@ async def test_achievements_user_not_found(monkeypatch):
     monkeypatch.setattr("bot.handlers.achievements.user_auth", mock_auth)
 
     mock_get = AsyncMock()
-    monkeypatch.setattr("bot.handlers.achievements.get_achievements", mock_get)
+    monkeypatch.setattr("bot.handlers.achievements.AchievementDbService.get_all_achievements", mock_get)
 
     fake_session = object()
     await achievements(message, session=fake_session)
@@ -63,11 +63,11 @@ async def test_achievements_empty_list(monkeypatch):
     monkeypatch.setattr("bot.handlers.achievements.user_auth", mock_auth)
 
     mock_get = AsyncMock(return_value=[])
-    monkeypatch.setattr("bot.handlers.achievements.get_achievements", mock_get)
+    monkeypatch.setattr("bot.handlers.achievements.AchievementDbService.get_all_achievements", mock_get)
 
     fake_session = object()
     await achievements(message, session=fake_session)
 
     mock_auth.assert_awaited_once_with(session=fake_session, message=message)
     mock_get.assert_awaited_once_with(session=fake_session)
-    assert message.answer.await_args_list == [call("У вас нет доступных достижений.")]
+    assert message.answer.await_args_list == [call("Нет доступных достижений.")]
