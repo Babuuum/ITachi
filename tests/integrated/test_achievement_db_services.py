@@ -52,3 +52,35 @@ async def test_add_achievement_to_user(db_session):
     stmt = select(UserAchievement).where(UserAchievement.user_id == user.id, UserAchievement.achievement_id == ach.id)
     db_entry = (await db_session.execute(stmt)).scalar_one_or_none()
     assert db_entry is not None
+
+
+async def test_get_completed_achievements_for_user(db_session):
+    user = User(tg_id=123, tg_nickname="completer")
+    ach_completed = Achievement(name="Done", description="done")
+    ach_pending = Achievement(name="Pending", description="todo")
+    db_session.add_all([user, ach_completed, ach_pending])
+    await db_session.commit()
+
+    db_session.add_all([
+        UserAchievement(user_id=user.id, achievement_id=ach_completed.id, completed=True),
+        UserAchievement(user_id=user.id, achievement_id=ach_pending.id, completed=False),
+    ])
+    await db_session.commit()
+
+    result = await AchievementDbService.get_completed_achievements_for_user(db_session, user_id=user.id)
+
+    assert len(result) == 1
+    assert result[0].name == "Done"
+
+
+async def test_get_achievement_by_name(db_session):
+    ach = Achievement(name="FindMe", description="exists")
+    db_session.add(ach)
+    await db_session.commit()
+
+    found = await AchievementDbService.get_achievement_by_name(db_session, "FindMe")
+    missing = await AchievementDbService.get_achievement_by_name(db_session, "Nope")
+
+    assert found is not None
+    assert found.name == "FindMe"
+    assert missing is None

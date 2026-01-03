@@ -26,11 +26,7 @@ async def test_user_auth_success(monkeypatch):
     fake_message = make_fake_message(1, "nick")
 
     mock_get_or_create = AsyncMock(return_value="user_obj")
-    monkeypatch.setattr(
-        user_auth_module.UserService,
-        "get_or_create_user",
-        mock_get_or_create,
-    )
+    monkeypatch.setattr(user_auth_module.UserTgService, "get_or_create_user", mock_get_or_create)
 
     result = await user_auth_module.user_auth(session=fake_session, message=fake_message)
 
@@ -47,11 +43,24 @@ async def test_user_auth_error(monkeypatch):
     fake_message = make_fake_message(2, "err")
 
     mock_get_or_create = AsyncMock(side_effect=RuntimeError("boom"))
-    monkeypatch.setattr(
-        user_auth_module.UserService,
-        "get_or_create_user",
-        mock_get_or_create,
-    )
+    monkeypatch.setattr(user_auth_module.UserTgService, "get_or_create_user", mock_get_or_create)
 
     with pytest.raises(RuntimeError):
         await user_auth_module.user_auth(session=fake_session, message=fake_message)
+
+
+async def test_user_auth_allows_missing_username(monkeypatch):
+    fake_session = FakeSession()
+    fake_message = make_fake_message(3, None)
+
+    mock_get_or_create = AsyncMock(return_value="user_obj_none")
+    monkeypatch.setattr(user_auth_module.UserTgService, "get_or_create_user", mock_get_or_create)
+
+    result = await user_auth_module.user_auth(session=fake_session, message=fake_message)
+
+    mock_get_or_create.assert_awaited_once_with(
+        fake_session,
+        tg_id=3,
+        tg_nickname=None,
+    )
+    assert result == "user_obj_none"
