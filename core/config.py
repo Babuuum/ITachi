@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: str = ""
     BASE_URL: str = ""
     WEBHOOK_PATH: str = "/webhook"
+    API_TOKEN: str = Field(default="")
 
     @computed_field
     @property

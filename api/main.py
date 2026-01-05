@@ -1,21 +1,31 @@
 import asyncio
 
 from aiogram.types import Update
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 
-from api.routers.users import router as users_router
 from api.routers.achievements import router as achievements_router
+from api.routers.user_achievements import router as user_achievements_router
+from api.routers.users import router as users_router
 
 from bot.main import dp, bot
 from core.config import get_settings
+from api.dependencies.auth import require_auth
+from api.middlewares import AuthMiddleware
 
 
 settings = get_settings()
 
 app = FastAPI(title='ITachi')
 
-app.include_router(users_router)
-app.include_router(achievements_router)
+app.add_middleware(
+    AuthMiddleware,
+    token=settings.API_TOKEN,
+    exempt_paths={settings.webhook_endpoint},
+)
+
+app.include_router(users_router, dependencies=[Depends(require_auth)])
+app.include_router(achievements_router, dependencies=[Depends(require_auth)])
+app.include_router(user_achievements_router, dependencies=[Depends(require_auth)])
 
 @app.post(settings.webhook_endpoint)
 async def telegram_webhook(request: Request):
